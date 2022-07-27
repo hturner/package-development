@@ -1,0 +1,555 @@
+---
+title: "Package Check and Documentation"
+author: <br>Dr Heather Turner<br>RSE Fellow, University of Warwick, UK<br>
+date: 28 July 2022
+output:
+  xaringan::moon_reader:
+    chakra: libs/remark-latest.min.js
+    css: ["default", "extra.css"]
+    lib_dir: libs
+    keep_md: true
+    nature:
+      beforeInit: "macros.js"
+      highlightStyle: googlecode
+      highlightLines: true
+      countIncrementalSlides: false
+      ratio: "16:9"
+always_allow_html: yes      
+---
+
+
+```{r setup, include=FALSE}
+options(digits = 4)
+options(width = 67)
+library(fs)
+library(knitr)
+library(kableExtra)
+opts_chunk$set(echo = TRUE, dev = "png", dpi = 300,
+               comment = "#", eval = TRUE, 
+               fig.width = 5, fig.height = 5, 
+               knitr.table.format = "markdown")
+# trim white space top and right of plot
+knit_hooks$set(small.mar = function(before, options, envir) {
+    if (before) par(mar = c(4, 5, 2, 1))
+})
+# trim white space when par won't work
+library(magick)
+knit_hooks$set(crop = function(before, options, envir) {
+    if (before || isTRUE((fig.num <- options$fig.num) == 0L))
+        return()
+    paths = fig_path(options$fig.ext, options, fig.num)
+    for (f in paths) image_write(image_trim(image_read(f)), f)
+})
+# function to put ``` when compiling Rmd
+ticks <- function() "```"
+set.seed(1)
+```
+
+class: middle
+
+## Check your package!
+
+---
+
+## R CMD check
+
+`R CMD check` is the command line utility provided by R to check R packages.
+
+It checks that all the components are valid and consistent with each other, in particular:
+ - Metadata in DESCRIPTION
+ - Imports and exports in NAMESPACE
+ - `.Rd` files in `/man`
+ 
+It will also run any examples and tests you have written.
+
+`devtools::check()` will run `R CMD check` in the background, with the results shown in the Build pane.
+
+???
+
+Note that only tests will check the correctness of code
+
+
+---
+## Run `devtools::check()`
+
+You will get lots of output. It will end with:
+
+```{r eval = FALSE}
+-- R CMD check results -------------------- mypackage 0.0.0.9000 ----
+Duration: 32.8s
+
+*> checking DESCRIPTION meta-information ... WARNING
+*  Non-standard license specification:
+*    `use_mit_license()`, `use_gpl3_license()` or friends to pick a
+*    license
+*  Standardizable: FALSE
+
+0 errors √ | 1 warnings x | 0 notes √
+```
+
+We haven't yet specified a license for our package.
+
+???
+
+On running `check()` you may get an error if you are using a networked drive.
+There's a fix coming in a few slides.
+
+---
+
+## Aside: in case of error
+
+On running `devtools::check()` you may get an error of the form
+
+```
+Updating mypackage documentation  
+Error: The specified file is not readable: path-to\mypackage\NAMESPACE  
+```
+
+This can happen if your repo is on a networked drive.
+
+This is covered in this [Stackoverflow question](https://stackoverflow.com/questions/40530968/overwriting-namespace-and-rd-with-roxygen2) and can be fixed.
+
+---
+
+## Aside: a fix for networked drives
+
+Save a copy of this file:
+
+[fix_for_networked_drives.R](fix_for_networked_drives.R)
+
+Save it somewhere other than the `mypackage` directory
+
+Open the file from the `mypackage` project session
+
+Run the whole file
+
+You should now find that `devtools::check()` proceeds normally
+
+
+---
+
+## Types of problem
+
+**ERROR** Must fix to get the code/example/test working
+
+**WARNING** Fix if sharing with others
+
+**NOTE** Fix if submitting to CRAN
+
+It is possible to submit to CRAN with a NOTE, but it’s best avoided
+
+
+---
+
+class: inverse middle
+
+# DESCRIPTION
+
+---
+
+## Metadata in `DESCRIPTION`
+
+- *Package*: The package name. The `changer` package can help you change the name!
+-  *Title*: One line, title case, with no period. Fewer than 65 characters.
+-  *Version*
+    - for release: MAJOR.MINOR.PATCH version.
+    - for development version building on version MAJOR.MINOR.PATCH, use: MAJOR.MINOR.PATCH.9000
+- *Authors@R*: A call to `person()` that is run to create the Author field when the package tarball is built. "aut" means author, "cre" means creator (maintainer), "ctb" means contributor.
+
+    ```{r, eval = FALSE}
+    person("A", "Person", email = "a.person@email.com", 
+           role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0001-2345-6789"))
+    ```
+
+
+???
+
+Given a version number MAJOR.MINOR.PATCH, increment the:
+
+MAJOR version when you make incompatible API changes,
+MINOR version when you add functionality in a backwards compatible manner, and
+PATCH version when you make backwards compatible bug fixes.
+
+
+The are two types of documentation: package level and function level.
+The DESCRIPTION file provides some of the package level documentation (or metadata)
+
+---
+
+## Metadata in `DESCRIPTION`
+
+-  *Description*: One paragraph describing what the package does. Keep the width 
+of the paragraph to 80 characters; indent subsequent lines with 4 spaces.
+-  *License*: Will discuss later
+-  *Encoding*: How to encode text, use UTF-8 encoding.
+-  *LazyData*: If `true` data sets in the package are stored in a database during package installation and loaded from the database as required. 
+
+???
+Add speaker notes
+
+lazy loading means that data is only loaded if needed.
+This means that they won’t occupy any memory until you use them.
+do NOT include LazyData: true in DESCRIPTION unless you actually ship data in your package. 
+
+---
+
+class: inverse center middle
+
+# License
+
+---
+
+## There are three main open source licenses
+
+1. CC0: “public domain”, best for data packages.
+    ```{r, eval = FALSE}
+    usethis::use_cc0_license()
+    ```
+2. MIT: Free for anyone to do anything with (including bundling in closed source product).
+    ```{r, eval = FALSE}
+    usethis::use_mit_license()
+    ```
+3. GPL: Changes and bundles must also be GPL
+    ```{r, eval = FALSE}
+    usethis::use_gpl_license()
+    ```
+ - If you are including someone else's GPL code directly, you must use GPL.
+
+
+???
+
+https://bookdown.org/rdpeng/RProgDA/open-source-licensing.html
+
+somewhat personal down to how important you consider open source to be and what you are happy with people doing with your code
+
+Suggest academic: GPL; community/other: MIT
+
+---
+
+# Proprietary packages
+
+You can use `usethis::use_proprietary()` to make it clear that your package isn’t open source.
+
+```{r, eval = FALSE}
+usethis::use_proprietary(copyright_holder = "ACME Ltd")
+```
+
+In DESCRIPTION:
+```
+License: file LICENSE
+```
+In LICENSE:
+```
+Copyright 2022 ACME Ltd. All rights reserved.
+```
+
+???
+
+usethis::use_proprietary
+
+---
+
+## Your Turn
+
+1. Open the DESCRIPTION file and add a title and description.
+2. Add yourself as an author and creator.
+3. Add an MIT license.
+4. Run the package check.
+5. Commit changes to GitHub.
+
+Tip: You can use Ctrl/Command + . and start typing a file name to open a file for editing
+
+???
+Add speaker notes
+
+---
+
+class: inverse center middle
+
+# README
+
+---
+
+## README
+
+The README is the quick start guide to your package.
+
+It should include 
+ - a brief overview
+ - instructions on how to install the package
+ - a few examples
+ 
+You should be able to borrow from the DESCRIPTION and help files!
+
+---
+
+## Creating a README
+
+** usethis** has functions to set up a README with/without R code
+
+```r
+usethis::use_readme_rmd()
+usethis::use_readme_md()
+```
+`README.Rmd` must be rendered to make `README.md` each time it 
+is changed.
+
+`usethis::use_readme_rmd()` creates a _pre-commit hook_ to check if `README.Rmd` and `README.md` are out of sync before committing.
+
+Use `build_readme()` to render with the latest version of the code.
+
+???
+
+`build_readme` creates a temporary version of the package
+
+---
+
+class: inverse middle
+# Continuous Integration
+
+---
+
+# Running Automatic Checks
+
+GitHub actions allow you to run code every time you push to GitHub.
+
+ - `usethis::use_github_actions()` sets up a bare-minimum workflow that runs R CMD check with the latest release of R on Linux.
+ - `usethis::use_github_action_check_standard()` sets up a GitHub action 
+that runs R CMD check with the latest release of R on Linux, Mac, and Windows and with both the previous release and development release of R on Linux.
+
+The practice of merging new code into the repository and running checks each time is known as Continuous Integration.
+
+???
+
+You can set up GA on Warwick but it doesn't do anything!
+
+Use the second option for serious projects
+
+---
+
+# Your Turn
+
+1. Create a README for `mypackage` with `usethis::use_readme_rmd()`.
+2. Fill in the description and an example.
+3. Try adding the README in a git commit - it should fail!. Render the 
+README with `build_rmd()`, then add both `README.Rmd` and `README.md` in a git commit.
+4. Run `usethis::use_github_action()`. It adds a badge to the README, so you will need to render the README again.
+5. Commit all the changes to git.
+
+---
+
+## Vignettes
+
+Vignettes are long-form documentation for your package.
+
+They use R markdown to integrate code and output into the documentation.
+
+Typically:
+ - A single/main vignette showing a complete workflow. 
+ - Optional further vignette(s) going deeper on one aspect/application
+ - Optional further vignette(s) for specialist audience (methodologists or developers)
+
+???
+
+a vignette with the same name as the package (e.g., vignettes/pkgdown.Rmd or vignettes/articles/pkgdown.Rmd) automatically becomes a top-level "Get started" link, 
+
+Fairly short read ~10 minutes
+
+---
+
+## Easiest way to get started is with `use_vignette()`
+
+```r
+usethis::use_vignette("name")
+```
+
+Adds to DESCRIPTION
+
+<pre>
+Suggests: knitr
+VignetteBuilder: knitr
+</pre>
+
+Creates `vignettes/`
+
+Drafts `vignettes/name.Rmd`
+
+---
+
+## Vignette = Rmarkdown + special metadata
+
+```
+
+---
+title: "Vignette Title"
+author: "Vignette author"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+%\VignetteIndexEntry{Vignette Title}
+%\VignetteEngine{knitr::rmarkdown}
+%\VignetteEncoding{UTF-8}
+---
+
+```
+* `html_vignette` output uses a custom style sheet to keep the file size of the 
+HTML as small as possible.
+* The `vignette:` field contains special metadata needed when the package is 
+built. **Don't forget to change the title here too!**
+
+---
+
+# Vignette workflow
+
+.center[
+```{r, out.width = "750px", echo=FALSE}
+knitr::include_graphics("vignette_workflow.png")
+```
+]
+
+??? 
+
+Need to install package so can call with `library()`
+
+---
+
+# Your turn
+
+1. Install your **animal_sounds** package and restart R 
+(Install & Restart button).
+2. Create a simple vignette that shows how to use `animal_sounds()`.
+3. Fix the "vignette title" in the YAML header.
+4. Knit the vignette to preview it.
+5. Run `devtools::install(build_vignettes = TRUE)` to install the package with the vignettes. Call `browseVignettes()` to open your vignette.
+6. Commit your changes to git.
+
+---
+
+class: inverse middle
+
+# NEWS
+
+---
+
+# Track changes in a NEWS file
+
+
+```{r, eval = FALSE}
+usethis::use_news_md()
+```
+
+Add news for the latest version at the top.
+
+Use a top-level heading for each release version
+
+```r
+# mypackage 1.0.0
+```
+
+---
+
+## What news to include
+
+Add each change in a bulleted list
+ - If you have many changes, split into subsections (e.g.
+    `## Major changes`, `## Minor improvements`, `## Bug fixes`).
+ - Wait until release to decide if subsections are necessary
+ 
+Note connections to GitHub
+ - If related to a GitHub issue, add the issue number, e.g. (`#10`). 
+ - If related to a pull request, add the pull request number and the author, e.g. (`#101, @hadley`). 
+ 
+---
+
+class: inverse middle
+
+# Package website with pkgdown
+
+---
+
+## A website for your package with pkgdown
+
+The **pkgdown** package is designed to make it quick and easy to build a website for your package
+
+Why have a website for your package?
+  - Google-ability
+  - Examples with output!
+  
+Setup `pkgdown` infrastructure
+```{r, eval = FALSE}
+usethis::use_pkgdown()
+```
+
+
+---
+
+## Build a website
+
+`pkgdown::build_site()` creates a package website based on the 
+standard documentation files.
+
+**Home page**: based on README
+
+**Reference**: 
+ - one page for help file
+ - generates an index page, with functions listed alphabetically by default
+
+---
+
+## Build a website (ctd)
+
+**Articles**: one page for each vignette
+
+**Get Started**: if you have a vignette with filename = package name
+
+**News**: based on NEWS.md
+
+Plus:
+ - A link to your GitHub repo (if listed in the DESCRIPTION url field).
+ - A link to the License
+ - Any badges added to your README (e.g. from GitHub Actions)
+
+---
+
+# Your turn
+
+1. Run `usethis::use_pkgdown()` - this will ask you to install `pkgdown` if you 
+don't already have it.
+2. Run `pkgdown::build_site()` to create a website for your package!
+
+No need to commit to changes to git just yet!
+
+---
+
+## Hosting your website
+
+- You can host your website directly from its GitHub repo
+- The recommended approach is to let GitHub build your page, instead of committing and pushing the artifacts of the built website (i.e., html files) to GitHub
+- `usethis::use_github_action("pkgdown")` will add an action to your GitHub repo to be run automatically every time you push to it to rebuild the site
+- See https://pkgdown.r-lib.org/articles/pkgdown.html#publishing for more on this
+
+---
+
+## Your Turn
+
+1. Run `usethis::use_github_action("pkgdown")` and commit and push all changes
+2. Go to your repo on GitHub and click on the Actions tab
+3. Once the action completes running, go to Settings > Pages (scroll down on the left) and change the Source to `gh-pages`
+4. Click on the link provided on that page to see your pkgdown website
+- Bonus: Add this link to the `DESCRIPTION` of your package in a new `URL` field
+
+---
+
+# References
+
+Wickham, H and Bryan, J, _R Packages_ (2nd edn, in progress), https://r-pkgs.org.
+
+R Core Team, _Writing R Extensions_, https://cran.r-project.org/doc/manuals/r-release/R-exts.html
+
+---
+
+## License
+
+<a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png" /></a><br /><span xmlns:dct="http://purl.org/dc/terms/" property="dct:title">Package Development Workshop</span> by <a href="https://github.com/hturner">Heather Turner</a> is licensed under <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a>. Derivative of <a href="https://github.com/forwards/workshops">Package Development Workshop</a> by <a href="https://forwards.github.io/about/">Forwards</a>, used under <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a>. 
+

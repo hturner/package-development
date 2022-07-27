@@ -1,0 +1,7 @@
+To split into modules would need to do as Forwards does i.e.
+
+ - initially use pkg::fun to refer to external function. Use use_package to add to Imports - does not change NAMESPACE (as long as use `::`)
+ - still need to export fn
+
+Tomorrw
+ - citation
