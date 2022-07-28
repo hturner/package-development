@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Publication and Maintenance</title>
+    <meta charset="utf-8" />
+    <meta name="author" content=" Dr Heather Turner RSE Fellow, University of Warwick, UK " />
+    <meta name="date" content="2022-07-29" />
+    <script src="libs/header-attrs-2.14/header-attrs.js"></script>
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link rel="stylesheet" href="extra.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# Publication and Maintenance
+]
+.author[
+### <br>Dr Heather Turner<br>RSE Fellow, University of Warwick, UK<br>
+]
+.date[
+### 29 July 2022
+]
+
+---
+
+
+
+
+
+class: inverse middle
+
+# R-Universe
+
+---
+
+# R-Universe
+
+With [R-Universe](https://r-universe.dev/), you can create a personal, CRAN-like repository.
+
+Binaries are built for Windows and MacOS, which a user can install using 
+`install.packages()`, e.g.
+
+
+```r
+# Enable repository from lrioudurand
+options(repos = c(
+  lrioudurand = 'https://lrioudurand.r-universe.dev',
+  CRAN = 'https://cloud.r-project.org'))
+# Download and install malt in R
+install.packages('malt')
+```
+
+---
+
+# Create your R Universe
+ 
+1. Create a git repository named "universe" on your GitHub account.
+2. Add a `packages.json` file listing the (public) git repos to include
+    ```
+    [
+        {
+            "package": "malt",
+            "url": "https://github.com/lrioudurand/malt"
+        }
+    ]
+    ```
+3. Install the [R-universe GitHub app](https://github.com/apps/r-universe/installations/new) on your GitHub account.
+4. Wait for your packages to start appearing on https://&lt;githubusername&gt;.r-universe.dev once they have finished building.
+
+---
+
+class: inverse center middle
+
+# CRAN
+
+---
+
+# Why publish on CRAN?
+
+- Sign of quality
+   - Code is ready to be used (not a beta version)
+   - Basic standards: documented code, running examples, etc
+   - Works with current version of R and other packages 
+   - Commitment of maintainer
+- Discoverability
+- Ease of installation
+- Bioconductor, rOpenSci: even higher standards, code review
+
+---
+
+## First submission to CRAN
+
+Read the official [Checklist for CRAN Submissions](https://cran.r-project.org/web/packages/submission_checklist.html) 
+to check requirements beyond the automated checks.
+
+Read the community-created [Prepare for CRAN](https://github.com/ThinkR-open/prepare-for-cran) checklist.
+
+Useful functions for additional checks:
+- `goodpractice::gp`
+- `spelling::spell_check_package`
+
+---
+
+## Run "as CRAN" checks
+
+[CRAN policies](https://cran.r-project.org/web/packages/policies.html) state that you must run `R CMD check --as-cran` _on the tarball to be uploaded_ with the current version of R-devel.
+
+First make sure the package passes check locally:
+```r
+devtools::check()
+```
+
+Then send to CRAN's win-builder to check on R-devel
+```r
+devtools::check_win_devel()
+```
+
+Further options: R-Hub (multiple platforms available, with different compilers) and Mac-builder (with M1)
+```r
+devtools::check_rhub()
+devtools::check_mac_release()
+```
+
+---
+
+## Prepare submission
+
+Write submission notes
+```r
+usethis::use_cran_comments()
+```
+
+Then submit to CRAN
+```r
+devtools::release()
+```
+
+This asks you questions which you should carefully read and answer.
+
+`usethis::use_release_issue()` creates a GitHub issue with a checklist.
+
+---
+
+## cran-comments.md
+
+```
+ ## Test environments
+ * local OS X install (R-release)
+ * win-builder (R-release, R-devel) 
+
+ ## R CMD check results
+
+ 0 errors | 0 warnings | 1 note
+
+ * This is a new release.
+```
+There’s always one note for a new submission
+
+---
+
+## If your submission fails
+
+Do not despair! It happens to everyone, even R-core members.
+
+If it’s from the CRAN robot, just fix the problem &amp; resubmit.
+
+If it’s from a human, do not respond to the email and do not
+argue. Instead update cran-comments.md &amp; resubmit.
+
+---
+
+## For resubmission
+
+```
+ This is a resubmission. Compared to the last submission, I
+ have:
+
+ * First change.
+ * Second change.
+ * Third change.
+
+ --
+
+ ## Test environments
+ * local OS X install, R 3.2.2
+ * win-builder (devel and release)
+
+ ## R CMD check results
+ ...
+```
+
+---
+ 
+## Subsequent submissions to CRAN
+
+Proceed as before. If you have reverse dependencies you need to also run 
+R CMD check on them, and  notify CRAN if you have deliberately broken them.
+
+Fortunately the revdepcheck package makes this fairly easy
+
+```r
+install_github("r-lib/revdepcheck")
+use_revdep_check()
+library(revdepcheck)
+revdep_check()
+revdep_report_cran()
+```
+
+---
+
+class: inverse middle
+
+# Promotion
+
+---
+
+# Promoting your package
+
+- Some promotion will/may be done for you: [CRANberries](https://dirk.eddelbuettel.com/cranberries/), [R Views](https://rviews.rstudio.com/) Monthly Top 40, 
+search engines (vignette/pkgdown site)
+- Some channels are obvious: website, blog, Twitter (#RStats)
+- Publicize your new package via R Weekly https://rweekly.org/
+    - Add to the weekly news blog, see [CONTRIBUTING](https://github.com/rweekly/rweekly.org/blob/gh-pages/CONTRIBUTING.md), and example pull requests [new package](https://github.com/rweekly/rweekly.org/pull/279), [new version](https://github.com/rweekly/rweekly.org/pull/277).
+- Would your package fit in a CRAN Task View? https://cran.r-project.org/web/views/
+    - Check [GitHub organization](https://github.com/cran-task-views/ctv) for how to propose addition
+
+---
+
+# Talks
+
+- Meetups: Warwick RUG, Coventry R-Ladies
+- Conferences (https://jumpingrivers.github.io/meetingsR/events.html)
+    - **General**: useR!, rstudio::conf, satRdays
+    - **Specific**: R/Finance, BioC, Psychoco
+    - **Non R-specific**: ???
+- Conferences provide greater exposure, particular to people working in relevant
+field(s).
+- Don't forget to share your slides! (Conference/personal website, LinkedIn, 
+RPubs, Slideshare)
+
+???
+
+In advance
+    
+---
+
+# Paper
+
+- A paper not only promotes your package but benefits from peer review
+    - Paper can also overlap with vignette
+- Traditional journals:
+    - **Open Source Software**: The R Journal, Journal of Statistical Software
+    - **Computing**: Computational Statistics and Data Analysis, Journal of 
+    Computational and Graphical Statistics, SoftwareX
+    - **Science**: Bioinformatics, PLOS ONE, Method in Ecology and Evolution
+- Alternative journals:
+    - F1000research Bioconductor/R package gateway: publish, then open review
+    - [Journal Open Source Software](https://joss.theoj.org/): open code review, short descriptive paper
+    
+---
+
+class: inverse middle
+
+# Maintenance
+
+---
+
+# Interacting with users
+
+- Bug reports/help requests
+    - Can show where documentation/tests need improving
+    - Help you find out who's using your package and what for
+    - Can give ideas for new features
+    - Can lead to collaborations
+- Avoid using email, so that other people can benefit
+    - GitHub issues
+    - Stackoverflow questions    
+    
+---
+
+# Interacting with developers
+
+* Add a code of conduct, e.g. Contributor Covenant
+    
+    ```r
+    usethis::use_code_of_conduct()
+    ```
+* Add a CONTRIBUTING.md to your GitHub repository
+    - Do you have a style guide?
+    - Reminders to run check/tests/add NEWS item to pull requests
+* Use tags to highlight issues: the following are promoted by GitHub
+    - `help wanted`
+    - `good first issue`
+* Add topics to your GitHub repo so potential contributors can find it    
+* Take advantage of events e.g. [Hacktoberfest](https://hacktoberfest.digitalocean.com/), [Closember](https://closember.org/)  
+
+---
+
+# Consider the longer-term
+
+* Write developer documentation
+ - `pkgdown` articles that are not vignettes: put in sub-directories of `/vignettes`
+ - Articles only in the source: add to `.Rbuildignore`
+* Buddy-up
+ - Review each other's code
+ - Co-author each other's packages
+ 
+---
+
+## References
+
+Wickham, H and Bryan, J, _R Packages_ (2nd edn, in progress), https://r-pkgs.org.
+
+rOpenSci Packages: Development, Maintenance, and Peer Review https://devguide.ropensci.org/index.html
+
+rOpenSci Statistical Software Peer Review (especially Chapter 3: Guide for Authors) https://stats-devguide.ropensci.org/pkgdev.html 
+
+
+---
+
+## License
+
+&lt;a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"&gt;&lt;img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png" /&gt;&lt;/a&gt;&lt;br /&gt;&lt;span xmlns:dct="http://purl.org/dc/terms/" property="dct:title"&gt;Package Development Workshop&lt;/span&gt; by &lt;span xmlns:cc="http://creativecommons.org/ns#" property="cc:attributionName"&gt;Forwards&lt;/span&gt; is licensed under a &lt;a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"&gt;Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License&lt;/a&gt;.
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="libs/remark-latest.min.js"></script>
+<script src="macros.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "googlecode",
+"highlightLines": true,
+"countIncrementalSlides": false,
+"ratio": "16:9"
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
